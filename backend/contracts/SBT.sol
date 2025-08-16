@@ -10,22 +10,21 @@ contract SoulboundToken is ERC721URIStorage, Ownable {
 
     constructor() ERC721("Soulbound Token", "SBT") {}
 
-    // Add this at the top after the constructor
-event SBTMinted(address indexed to, uint256 indexed tokenId, string tokenURI);
+    event SBTMinted(address indexed to, uint256 indexed tokenId, string tokenURI);
 
-function mint(address to, string memory uri) external onlyOwner returns (uint256) {
-    uint256 newTokenId = ++_tokenIds;
-    _safeMint(to, newTokenId);
-    _setTokenURI(newTokenId, uri);
+    function mint(string memory uri) external returns (uint256) {
+        uint256 newTokenId = ++_tokenIds;
+        _safeMint(msg.sender, newTokenId);
+        _setTokenURI(newTokenId, uri);
 
-    emit SBTMinted(to, newTokenId, uri);  // <--- Emit custom event
+        emit SBTMinted(msg.sender, newTokenId, uri);
 
-    return newTokenId;
-}
-function currentTokenId() external view returns (uint256) {
-    return _tokenIds;
-}
+        return newTokenId;
+    }
 
+    function currentTokenId() external view returns (uint256) {
+        return _tokenIds;
+    }
 
     /// @notice Burn `tokenId`.
     /// @dev Only the token owner or the contract owner can burn the token.
@@ -40,31 +39,32 @@ function currentTokenId() external view returns (uint256) {
     }
 
     /// @dev Disable transfers by using beforeTokenTransfer hook.
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId
-    ) internal {
-        require(from == address(0) || to == address(0), "SoulboundToken: transfers are disabled");
-    }
-
+   function _beforeTokenTransfer(
+    address from,
+    address to,
+    uint256 tokenId,
+    uint256 batchSize
+) internal override(ERC721) {
+    require(from == address(0) || to == address(0), "SoulboundToken: transfers are disabled");
+    super._beforeTokenTransfer(from, to, tokenId, batchSize);
+}
     /// @dev Disable approvals.
-    function approve(address, uint256) public pure override(ERC721, IERC721) {
+    function approve(address to, uint256 tokenId) public pure override(ERC721, IERC721) {
         revert("SoulboundToken: approvals are disabled");
     }
 
     /// @dev Disable batch approvals.
-    function setApprovalForAll(address, bool) public pure override(ERC721, IERC721) {
+    function setApprovalForAll(address operator, bool approved) public pure override(ERC721, IERC721) {
         revert("SoulboundToken: approvals are disabled");
     }
 
     /// @dev Return zero address for getApproved.
-    function getApproved(uint256) public pure override(ERC721, IERC721) returns (address) {
+    function getApproved(uint256 tokenId) public pure override(ERC721, IERC721) returns (address) {
         return address(0);
     }
 
     /// @dev Return false for isApprovedForAll.
-    function isApprovedForAll(address, address) public pure override(ERC721, IERC721) returns (bool) {
+    function isApprovedForAll(address owner, address operator) public pure override(ERC721, IERC721) returns (bool) {
         return false;
     }
 }

@@ -1,21 +1,14 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-
-interface SBT {
-  tokenId: string;
-  name: string;
-  description: string;
-  videoUrl: string; // full URL from backend
-}
+import { getAllSBTs, SBTMetadata } from "../utils/api";
 
 const AllSBTs: React.FC = () => {
-  const [sbts, setSbts] = useState<SBT[]>([]);
+  const [sbts, setSbts] = useState<SBTMetadata[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchSBTs = async () => {
     try {
-      const res = await axios.get("http://localhost:4000/sbts"); // backend endpoint
-      setSbts(res.data);
+      const data = await getAllSBTs();
+      setSbts(data);
     } catch (error) {
       console.error("Error fetching SBTs:", error);
     } finally {
@@ -26,9 +19,8 @@ const AllSBTs: React.FC = () => {
   useEffect(() => {
     fetchSBTs();
 
-    // Optional: Refresh automatically every 5 seconds for live updates
+    // Optional: Refresh every 5 seconds for live updates
     const interval = setInterval(fetchSBTs, 5000);
-
     return () => clearInterval(interval);
   }, []);
 
@@ -54,16 +46,17 @@ const AllSBTs: React.FC = () => {
             >
               <h2 className="text-xl font-semibold mb-2">{sbt.name}</h2>
               <p className="text-gray-700 mb-4">{sbt.description}</p>
-              
+
               <video
                 controls
                 className="w-full rounded-lg mb-4"
-                src={`http://localhost:4000${sbt.videoUrl}`}
+                src={sbt.videoUrl} // videoUrl already contains the full link
               >
                 Your browser does not support the video tag.
               </video>
-              
+
               <p className="text-sm text-gray-500">Token ID: {sbt.tokenId}</p>
+              <p className="text-sm text-gray-500">Owner: {sbt.owner}</p>
             </div>
           ))}
         </div>

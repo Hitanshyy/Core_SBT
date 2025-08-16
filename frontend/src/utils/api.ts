@@ -1,5 +1,6 @@
 import { Contract } from "ethers";
 import { ethers } from "ethers";
+
 import SoulboundTokenAbi from "./abis/SoulboundToken.json";
 import { connectWallet } from "./wallet";
 
@@ -22,13 +23,13 @@ export interface MintSBTRequest {
 }
 
 // ------------------------ Contract Config ------------------------
-export const CONTRACT_ADDRESS = "0x99240713216bfe9cD226fD23C4dFB8a7D80b4712";
+export const CONTRACT_ADDRESS = "0x56dE46d77Dd8c1ab1e8f54803919DF7f679300Dc";
 export const CONTRACT_ABI = SoulboundTokenAbi;
 
 // ------------------------ Helper Function ------------------------
 const getSBTContract = async (): Promise<Contract> => {
   await connectWallet();
-  const provider = new ethers.BrowserProvider(window.ethereum);
+const provider = new ethers.providers.Web3Provider(window.ethereum);
   const signer = await provider.getSigner();
   return new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 };
@@ -84,7 +85,7 @@ export const mintSBT = async (
   const tokenURI = await uploadMetadata(request.name, request.description, videoUrl);
 
   // Mint SBT on-chain
-  const tx = await contract.mint(request.ownerAddress, tokenURI);
+  const tx = await contract.mint(tokenURI);
   await tx.wait();
 
   // Get the latest tokenId directly from the contract
@@ -96,7 +97,32 @@ export const mintSBT = async (
     videoUrl,
   };
 };
+// Connect provider (for reading data, no wallet needed)
 
+export async function getAllSBTs(): Promise<SBTMetadata[]> {
+  const contract = await getSBTContract();
+  const total = await contract.currentTokenId();
+  const sbts: SBTMetadata[] = [];
+
+  for (let i = 1; i <= total; i++) {
+    const owner = await contract.ownerOf(i);
+    const tokenURI = await contract.tokenURI(i);
+    const metadataRes = await fetch(tokenURI);
+    const metadata = await metadataRes.json();
+
+    sbts.push({
+      id: i.toString(),
+      tokenId: i.toString(),
+      owner,
+      name: metadata.name,
+      description: metadata.description,
+      videoUrl: metadata.videoUrl,
+      mintedAt: metadata.mintedAt,
+    });
+  }
+
+  return sbts.reverse(); // latest first
+}
 
 
 
@@ -105,7 +131,30 @@ export const mintSBT = async (
 export const getSBTsByOwner = async (
   ownerAddress: string
 ): Promise<SBTMetadata[]> => {
-  throw new Error("getSBTsByOwner not implemented yet");
+  const contract = await getSBTContract();
+  const totalTokens = await contract.currentTokenId();
+
+  const sbts: SBTMetadata[] = [];
+
+  for (let i = 1; i <= totalTokens; i++) {
+    const owner = await contract.ownerOf(i);
+    if (owner.toLowerCase() === ownerAddress.toLowerCase()) {
+      const tokenURI = await contract.tokenURI(i);
+      const metadataRes = await fetch(tokenURI);
+      const metadata = await metadataRes.json();
+      sbts.push({
+        id: i.toString(),
+        tokenId: i.toString(),
+        owner,
+        name: metadata.name,
+        description: metadata.description,
+        videoUrl: metadata.videoUrl,
+        mintedAt: metadata.mintedAt,
+      });
+    }
+  }
+
+  return sbts;
 };
 
 export const formatDate = (dateString: string): string => {

@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "C:\\Users\\lenovo\\SBT\\backend\\contracts\\SBT.sol": {
-      "lastModificationDate": 1755247528305,
-      "contentHash": "a62557b58b5a7d2abb89bc8f980980c5",
+      "lastModificationDate": 1755288978175,
+      "contentHash": "4c495af0e845e65082b9b407f388080c",
       "sourceName": "contracts/SBT.sol",
       "solcConfig": {
         "version": "0.8.20",

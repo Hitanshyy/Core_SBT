@@ -20,6 +20,7 @@ const CORE_TESTNET_CONFIG = {
 
 declare global {
   interface Window {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ethereum?: any;
   }
 }
@@ -51,6 +52,7 @@ export const connectWallet = async (): Promise<WalletState> => {
           method: 'wallet_switchEthereumChain',
           params: [{ chainId: CORE_TESTNET_CONFIG.chainId }],
         });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (switchError: any) {
         // If the chain doesn't exist, add it
         if (switchError.code === 4902) {
@@ -111,11 +113,11 @@ export const checkWalletConnection = async (): Promise<WalletState> => {
     return disconnectWallet();
   }
 };
-
 export const shortenAddress = (address: string): string => {
   if (!address) return '';
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 };
+
 
 // Listen for account and chain changes
 export const setupWalletListeners = (
